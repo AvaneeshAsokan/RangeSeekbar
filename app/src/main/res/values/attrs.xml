@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RangeSeekbar">
+        <attr name="trackColor" format="color"/>
+        <attr name="leftThumbTintColor" format="reference|color"/>
+        <attr name="rightThumbTintColor" format="reference|color"/>
+        <attr name="leftThumbDrawable" format="reference"/>
+        <attr name="rightThumbDrawable" format="reference"/>
+        <attr name="leftThumbWidth" format="dimension"/>
+        <attr name="leftThumbHeight" format="dimension"/>
+        <attr name="rightThumbWidth" format="dimension"/>
+        <attr name="rightThumbHeight" format="dimension"/>
+        <attr name="gap" format="dimension"/>
+        <attr name="enablePushThumb" format="boolean"/>
+    </declare-styleable>
+</resources>
