@@ -14,6 +14,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.getDimensionOrThrow
 import androidx.core.content.withStyledAttributes
 import com.laymanCodes.rangeSeekbar.databinding.RangeSeekbarBinding
+import com.laymanCodes.rangeSeekbar.listener.RangeChangeListener
+import kotlin.math.roundToInt
 
 class RangeSeekbar : ConstraintLayout {
     private val TAG = RangeSeekbar::class.java.canonicalName
@@ -48,6 +50,7 @@ class RangeSeekbar : ConstraintLayout {
     private var _binding: RangeSeekbarBinding? = null
     private val binding: RangeSeekbarBinding get() = _binding!!
 
+    //  visual attributes
     private var leftThumbDrawable: Drawable? = null
     private var rightThumbDrawable: Drawable? = null
     private var leftThumbWidth: Int? = 20.px
@@ -56,8 +59,28 @@ class RangeSeekbar : ConstraintLayout {
     private var rightThumbHeight: Int? = 20.px
     private var leftThumbTint: Int? = null
     private var rightThumbTint: Int? = null
-    private var gap: Int = 5.px
+    private var gap: Int = 0.px
     private var enablePushThumb: Boolean = false
+
+    //  functional attributes
+    private var min: Int = 0
+    private var max: Int = 100
+    private var leftThumbValue: Int = min
+    private var rightThumbValue: Int = max
+
+    private var rangeChangeListener: RangeChangeListener? = null
+
+    fun setMin(min: Int){
+        this.min = min
+    }
+
+    fun setMax(max: Int){
+        this.max = max
+    }
+
+    fun setRangeChangeListener(rangeChangeListener: RangeChangeListener){
+        this.rangeChangeListener = rangeChangeListener
+    }
 
     private fun getAttributeFromXml(context: Context, attrs: AttributeSet?) {
         context.withStyledAttributes(attrs, R.styleable.RangeSeekbar) {
@@ -109,11 +132,18 @@ class RangeSeekbar : ConstraintLayout {
                 if (event.action == MotionEvent.ACTION_MOVE) {
                     if (startThumb.x + event.x in 0.0f .. (endThumb.x - gap).toFloat()) {
                         startThumb.x += event.x
-                        Log.d(TAG, "setupListeners: x = ${startThumb.x}, event x = ${event.x}")
                     } else if (enablePushThumb && (startThumb.x + event.x) in (endThumb.x - gap).toFloat() .. (track.right - gap).toFloat()) {
                         endThumb.x = endThumb.x + event.x
                         startThumb.x = endThumb.x - gap
                     }
+                } else if (event.action == MotionEvent.ACTION_UP) {
+                    val totalPxInTrack = track.width
+                    val totalRange = max - min
+
+                    val leftThumbValue = ((startThumb.x / totalPxInTrack) * totalRange).roundToInt() + min
+                    val rightThumbValue = ((endThumb.x / totalPxInTrack) * totalRange).roundToInt() + min
+
+                    rangeChangeListener?.onRangeChange(leftThumbValue, rightThumbValue)
                 }
                 return@setOnTouchListener true
             }
@@ -121,11 +151,18 @@ class RangeSeekbar : ConstraintLayout {
                 if (event.action == MotionEvent.ACTION_MOVE) {
                     if (endThumb.x + event.x in (startThumb.x + gap).toFloat() .. (track.right - 10.px).toFloat()) {
                         endThumb.x += event.x
-                        Log.d(TAG, "setupListeners: x = ${endThumb.x}, event x = ${event.x}")
                     } else if (enablePushThumb && (endThumb.x + event.x) in (0.0f + gap) .. (startThumb.x + gap)) {
                         startThumb.x = startThumb.x + event.x
                         endThumb.x = startThumb.x + gap
                     }
+                } else if (event.action == MotionEvent.ACTION_UP) {
+                    val totalPxInTrack = track.width
+                    val totalRange = max - min
+
+                    val leftThumbValue = ((startThumb.x / totalPxInTrack) * totalRange).roundToInt() + min
+                    val rightThumbValue = ((endThumb.x / totalPxInTrack) * totalRange).roundToInt() + min
+
+                    rangeChangeListener?.onRangeChange(leftThumbValue, rightThumbValue)
                 }
                 return@setOnTouchListener true
             }
