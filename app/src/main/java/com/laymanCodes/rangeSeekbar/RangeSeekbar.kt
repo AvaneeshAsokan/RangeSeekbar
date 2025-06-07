@@ -57,7 +57,7 @@ class RangeSeekbar : ConstraintLayout {
     private var leftThumbTint: Int? = null
     private var rightThumbTint: Int? = null
     private var gap: Int = 5.px
-    private var enablePushThumb: Boolean = false    //  todo: this will allow one thumb indicator to move the other thumb indicator while still maintaining the specified gap
+    private var enablePushThumb: Boolean = false
 
     private fun getAttributeFromXml(context: Context, attrs: AttributeSet?) {
         context.withStyledAttributes(attrs, R.styleable.RangeSeekbar) {
