@@ -1,4 +1,4 @@
-package com.laymanCodes.rangeSeekbar
+package com.laymanCodes.rangeSeekbar.bars
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -6,15 +6,15 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.res.getDimensionOrThrow
 import androidx.core.content.withStyledAttributes
+import com.laymanCodes.rangeSeekbar.R
 import com.laymanCodes.rangeSeekbar.databinding.RangeSeekbarBinding
 import com.laymanCodes.rangeSeekbar.listener.RangeChangeListener
+import com.laymanCodes.rangeSeekbar.px
 import kotlin.math.roundToInt
 
 class RangeSeekbar : ConstraintLayout {

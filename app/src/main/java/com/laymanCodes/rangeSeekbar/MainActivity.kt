@@ -24,6 +24,7 @@ class MainActivity: AppCompatActivity(), RangeChangeListener {
             setMax(1000)
             setRangeChangeListener(this@MainActivity)
         }
+
     }
 
     override fun onRangeChange(min: Int, max: Int) {
