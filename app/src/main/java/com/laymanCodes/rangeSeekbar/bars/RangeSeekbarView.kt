@@ -7,13 +7,16 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import androidx.core.content.withStyledAttributes
 import com.laymanCodes.rangeSeekbar.R
 import com.laymanCodes.rangeSeekbar.px
-import kotlin.jvm.Throws
+import kotlin.math.roundToInt
 
 class RangeSeekbarView : View {
+
+    private val TAG = RangeSeekbarView::class.java.canonicalName
 
     constructor(context: Context): super(context)
 
@@ -59,12 +62,12 @@ class RangeSeekbarView : View {
     private var enablePushThumb: Boolean = false
 
     private var cornerRadius: Float = 20.px.toFloat()
-    private var barPadding: Float = 10.px.toFloat()
-    private var barHeight: Float = 30.px.toFloat()
-    private var rangeMin: Int = 0       //  min range choose-able
-    private var rangeMax: Int = 100     //  mac range choose-able
-    private var chosenMin: Int = rangeMin   //  actual chosen min value
-    private var chosenMax: Int = rangeMax   //  actual chosen max value
+    private var barPadding  : Float = 10.px.toFloat()
+    private var barHeight   : Float = 30.px.toFloat()
+    private var rangeMin    : Int   = 0               //  min range choose-able
+    private var rangeMax    : Int   = 100             //  mac range choose-able
+    private var chosenMin   : Int   = rangeMin        //  actual chosen min value
+    private var chosenMax   : Int   = rangeMax        //  actual chosen max value
 
     private lateinit var barPaint: Paint
     private lateinit var barRect: RectF
@@ -122,7 +125,7 @@ class RangeSeekbarView : View {
         barRect.apply {
             left = barPadding
             top = (height - barHeight) * .5f
-            right = width - barPadding
+            right = width.toFloat() - barPadding
             bottom = (barHeight + height) * .5f
         }
 
@@ -135,15 +138,16 @@ class RangeSeekbarView : View {
         leftThumbPaint.color = leftThumbTint?: Color.CYAN
 
         leftThumbRect.apply {
-            left = getOnBar(chosenMin) + barRect.left
+            left = getOnBar(chosenMin)
             top = 0f
-            right = leftThumbWidth.toFloat() + barRect.left
+            right = left + leftThumbWidth.toFloat()
             bottom = height.toFloat()
         }
 
         //  when calculating the actual left thumb value we must minus with the visual offset of barRect.left
 
         canvas.drawRect(leftThumbRect, leftThumbPaint)
+        Log.d(TAG, "setupLeftThumb: getMinSelected = ${getMaxSelected()}")
     }
 
     private fun setupRightThumb(
@@ -159,6 +163,7 @@ class RangeSeekbarView : View {
         }
 
         canvas.drawRect(rightThumbRect, rightThumbPaint)
+        Log.d(TAG, "setupRightThumb: getMaxSelected = ${getMaxSelected()}")
     }
 
     private fun drawTrack(canvas: Canvas, paint: Paint, rectF: RectF){
@@ -168,10 +173,14 @@ class RangeSeekbarView : View {
     private fun getOnBar(value: Int): Float {
         //  find the position of the value based on the width of the bar
         if (value in rangeMin .. rangeMax) {
-            return ((value / rangeMax) * barRect.right)
+            return ((value.toFloat() / rangeMax) * barRect.width() + barRect.left)
         } else {
             throw IllegalArgumentException("Chosen value if out of range.")
         }
     }
+
+    fun getMinSelected(): Int = (((leftThumbRect.left * rangeMax) / barRect.right) - barRect.left).roundToInt()
+
+    fun getMaxSelected(): Int = ((rightThumbRect.right * rangeMax) / barRect.right).roundToInt()
 
 }

@@ -35,4 +35,11 @@
         app:rightThumbDrawable="@drawable/carat_right"
         app:rightThumbTintColor="@color/red" />
 
+    <View
+        android:layout_width="2dp"
+        android:layout_height="match_parent"
+        android:background="@color/purple_200"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
