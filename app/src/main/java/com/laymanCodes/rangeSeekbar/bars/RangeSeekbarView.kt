@@ -148,7 +148,7 @@ class RangeSeekbarView : View {
         leftThumbPaint.color = leftThumbTint ?: Color.CYAN
 
         leftThumbRect.apply {
-            left = getOnBar(chosenMin.roundToInt())
+            left = getOnBar(chosenMin.roundToInt()) - leftThumbWidth.toFloat()/2
             top = 0f
             right = left + leftThumbWidth.toFloat()
             bottom = height.toFloat()
@@ -166,9 +166,9 @@ class RangeSeekbarView : View {
         rightThumbPaint.color = rightThumbTint ?: Color.CYAN
 
         rightThumbRect.apply {
-            left = getOnBar(chosenMax.roundToInt()) - rightThumbWidth.toFloat()
+            left = getOnBar(chosenMax.roundToInt()) - rightThumbWidth.toFloat()/2
             top = 0f
-            right = getOnBar(chosenMax.roundToInt())
+            right = getOnBar(chosenMax.roundToInt()) + rightThumbWidth.toFloat()/2
             bottom = height.toFloat()
         }
 
@@ -200,10 +200,10 @@ class RangeSeekbarView : View {
     }
 
     fun getMinSelected(): Int =
-        (((leftThumbRect.left - barRect.left) * rangeMax) / barRect.width()).roundToInt()
+        (((leftThumbRect.centerX() - barRect.left) * rangeMax) / barRect.width()).roundToInt()
 
     fun getMaxSelected(): Int =
-        (((rightThumbRect.right - barRect.left) * rangeMax) / barRect.width()).roundToInt()
+        (((rightThumbRect.centerX() - barRect.left) * rangeMax) / barRect.width()).roundToInt()
 
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
