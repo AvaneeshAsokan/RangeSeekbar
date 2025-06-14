@@ -6,11 +6,14 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import android.text.method.Touch
 import android.util.AttributeSet
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.withStyledAttributes
 import com.laymanCodes.rangeSeekbar.R
+import com.laymanCodes.rangeSeekbar.enum.TouchTargets
 import com.laymanCodes.rangeSeekbar.px
 import kotlin.math.roundToInt
 
@@ -18,13 +21,17 @@ class RangeSeekbarView : View {
 
     private val TAG = RangeSeekbarView::class.java.canonicalName
 
-    constructor(context: Context): super(context)
+    constructor(context: Context) : super(context)
 
-    constructor(context: Context, attrs: AttributeSet? = null): super(context, attrs){
+    constructor(context: Context, attrs: AttributeSet? = null) : super(context, attrs) {
         initialize(context, attrs)
     }
 
-    constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0): super(context, attrs, defStyleAttr) {
+    constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : super(
+        context,
+        attrs,
+        defStyleAttr
+    ) {
         initialize(context, attrs)
     }
 
@@ -62,12 +69,14 @@ class RangeSeekbarView : View {
     private var enablePushThumb: Boolean = false
 
     private var cornerRadius: Float = 20.px.toFloat()
-    private var barPadding  : Float = 10.px.toFloat()
-    private var barHeight   : Float = 30.px.toFloat()
-    private var rangeMin    : Int   = 0               //  min range choose-able
-    private var rangeMax    : Int   = 100             //  mac range choose-able
-    private var chosenMin   : Int   = rangeMin        //  actual chosen min value
-    private var chosenMax   : Int   = rangeMax        //  actual chosen max value
+    private var barPadding: Float = 10.px.toFloat()
+    private var barHeight: Float = 30.px.toFloat()
+    private var rangeMin: Int = 0               //  min range choose-able
+    private var rangeMax: Int = 1000             //  max range choose-able
+    private var chosenMin: Int = rangeMin        //  actual chosen min value
+    private var chosenMax: Int = rangeMax        //  actual chosen max value
+
+    private var currentTouchTarget: TouchTargets = TouchTargets.none
 
     private lateinit var barPaint: Paint
     private lateinit var barRect: RectF
@@ -94,7 +103,8 @@ class RangeSeekbarView : View {
             leftThumbWidth = getDimensionPixelSize(R.styleable.RangeSeekbar_leftThumbWidth, 20.px)
             rightThumbWidth = getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbWidth, 20.px)
             leftThumbHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_leftThumbHeight, 20.px)
-            rightThumbHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbHeight, 20.px)
+            rightThumbHeight =
+                getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbHeight, 20.px)
 
             gap = getDimensionPixelSize(R.styleable.RangeSeekbar_gap, 5.px)
 
@@ -135,7 +145,7 @@ class RangeSeekbarView : View {
     private fun setupLeftThumb(
         canvas: Canvas,
     ) {
-        leftThumbPaint.color = leftThumbTint?: Color.CYAN
+        leftThumbPaint.color = leftThumbTint ?: Color.CYAN
 
         leftThumbRect.apply {
             left = getOnBar(chosenMin)
@@ -153,7 +163,7 @@ class RangeSeekbarView : View {
     private fun setupRightThumb(
         canvas: Canvas,
     ) {
-        rightThumbPaint.color = rightThumbTint?: Color.CYAN
+        rightThumbPaint.color = rightThumbTint ?: Color.CYAN
 
         rightThumbRect.apply {
             left = getOnBar(chosenMax) - rightThumbWidth.toFloat()
@@ -166,21 +176,72 @@ class RangeSeekbarView : View {
         Log.d(TAG, "setupRightThumb: getMaxSelected = ${getMaxSelected()}")
     }
 
-    private fun drawTrack(canvas: Canvas, paint: Paint, rectF: RectF){
+    private fun drawTrack(canvas: Canvas, paint: Paint, rectF: RectF) {
         canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, paint)
     }
 
+    /**
+     * gets the position of the value on the bar based on the range chosen for min and max.
+     */
     private fun getOnBar(value: Int): Float {
         //  find the position of the value based on the width of the bar
-        if (value in rangeMin .. rangeMax) {
-            return ((value.toFloat() / rangeMax) * barRect.width() + barRect.left)
+        if (value in rangeMin..rangeMax) {
+            return (((value.toFloat() / rangeMax) * barRect.width()) + barRect.left)
         } else {
-            throw IllegalArgumentException("Chosen value if out of range.")
+            throw IllegalArgumentException("Chosen value is out of range.")
         }
     }
 
-    fun getMinSelected(): Int = (((leftThumbRect.left * rangeMax) / barRect.right) - barRect.left).roundToInt()
+    private fun getActualValueFromPosition(xPosition: Float): Int {
+        return (((xPosition - barRect.left) * rangeMax)/barRect.width()).coerceIn(rangeMin.toFloat(), rangeMax.toFloat()).toInt()
+    }
+
+    fun getMinSelected(): Int =
+        (((leftThumbRect.left * rangeMax) / barRect.right) - barRect.left).roundToInt()
 
     fun getMaxSelected(): Int = ((rightThumbRect.right * rangeMax) / barRect.right).roundToInt()
 
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event == null) return super.onTouchEvent(event)
+
+        val action = event.action
+        when (action and MotionEvent.ACTION_MASK) {
+            MotionEvent.ACTION_DOWN -> {
+                currentTouchTarget = findPressedThumb(event)
+                Log.d(TAG, "onTouchEvent: touched = ${currentTouchTarget.name}")
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (currentTouchTarget == TouchTargets.leftThumb) {
+                        chosenMin = getActualValueFromPosition(event.x.coerceIn(barRect.left, barRect.right))
+                        invalidate()
+                    /*}*/ /*else if (enablePushThumb && (leftThumbRect.left + event.x) in (rightThumbRect.right - gap).toFloat() .. (barRect.right - gap).toFloat()) {
+                        rightThumbRect.right = rightThumbRect.right + event.x
+                        leftThumbRect.left = rightThumbRect.right - gap
+                    }*/
+
+                } else if (currentTouchTarget == TouchTargets.rightThumb) {
+                    chosenMax = getActualValueFromPosition(event.x.coerceIn(barRect.left, barRect.right))
+                    invalidate()
+                }
+            }
+
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_CANCEL -> {
+                currentTouchTarget = TouchTargets.none
+            }
+
+        }
+
+        return true
+    }
+
+    private fun findPressedThumb(event: MotionEvent): TouchTargets {
+        if (event.x in (leftThumbRect.left - 10)..leftThumbRect.right + 10)
+            return TouchTargets.leftThumb
+        else if (event.x in (rightThumbRect.left - 10)..rightThumbRect.right + 10)
+            return TouchTargets.rightThumb
+
+        return TouchTargets.bar
+    }
 }
