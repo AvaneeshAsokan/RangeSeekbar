@@ -73,8 +73,8 @@ class RangeSeekbarView : View {
     private var barHeight: Float = 30.px.toFloat()
     private var rangeMin: Int = 0               //  min range choose-able
     private var rangeMax: Int = 1000             //  max range choose-able
-    private var chosenMin: Int = rangeMin        //  actual chosen min value
-    private var chosenMax: Int = rangeMax        //  actual chosen max value
+    private var chosenMin: Float = rangeMin.toFloat()        //  actual chosen min value
+    private var chosenMax: Float = rangeMax.toFloat()        //  actual chosen max value
 
     private var currentTouchTarget: TouchTargets = TouchTargets.none
 
@@ -148,7 +148,7 @@ class RangeSeekbarView : View {
         leftThumbPaint.color = leftThumbTint ?: Color.CYAN
 
         leftThumbRect.apply {
-            left = getOnBar(chosenMin)
+            left = getOnBar(chosenMin.roundToInt())
             top = 0f
             right = left + leftThumbWidth.toFloat()
             bottom = height.toFloat()
@@ -157,7 +157,7 @@ class RangeSeekbarView : View {
         //  when calculating the actual left thumb value we must minus with the visual offset of barRect.left
 
         canvas.drawRect(leftThumbRect, leftThumbPaint)
-        Log.d(TAG, "setupLeftThumb: getMinSelected = ${getMaxSelected()}")
+        Log.d(TAG, "setupLeftThumb: getMinSelected = ${getMinSelected()}")
     }
 
     private fun setupRightThumb(
@@ -166,9 +166,9 @@ class RangeSeekbarView : View {
         rightThumbPaint.color = rightThumbTint ?: Color.CYAN
 
         rightThumbRect.apply {
-            left = getOnBar(chosenMax) - rightThumbWidth.toFloat()
+            left = getOnBar(chosenMax.roundToInt()) - rightThumbWidth.toFloat()
             top = 0f
-            right = getOnBar(chosenMax)
+            right = getOnBar(chosenMax.roundToInt())
             bottom = height.toFloat()
         }
 
@@ -192,14 +192,19 @@ class RangeSeekbarView : View {
         }
     }
 
-    private fun getActualValueFromPosition(xPosition: Float): Int {
-        return (((xPosition - barRect.left) * rangeMax)/barRect.width()).coerceIn(rangeMin.toFloat(), rangeMax.toFloat()).toInt()
+    private fun getActualValueFromPosition(xPosition: Float): Float {
+        return (((xPosition - barRect.left) * rangeMax) / barRect.width()).coerceIn(
+            rangeMin.toFloat(),
+            rangeMax.toFloat()
+        )
     }
 
     fun getMinSelected(): Int =
-        (((leftThumbRect.left * rangeMax) / barRect.right) - barRect.left).roundToInt()
+        (((leftThumbRect.left - barRect.left) * rangeMax) / barRect.width()).roundToInt()
 
-    fun getMaxSelected(): Int = ((rightThumbRect.right * rangeMax) / barRect.right).roundToInt()
+    fun getMaxSelected(): Int =
+        (((rightThumbRect.right - barRect.left) * rangeMax) / barRect.width()).roundToInt()
+
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event == null) return super.onTouchEvent(event)
@@ -213,17 +218,15 @@ class RangeSeekbarView : View {
 
             MotionEvent.ACTION_MOVE -> {
                 if (currentTouchTarget == TouchTargets.leftThumb) {
-                        chosenMin = getActualValueFromPosition(event.x.coerceIn(barRect.left, barRect.right))
-                        invalidate()
-                    /*}*/ /*else if (enablePushThumb && (leftThumbRect.left + event.x) in (rightThumbRect.right - gap).toFloat() .. (barRect.right - gap).toFloat()) {
-                        rightThumbRect.right = rightThumbRect.right + event.x
-                        leftThumbRect.left = rightThumbRect.right - gap
-                    }*/
-
+                    chosenMin = getActualValueFromPosition(event.x).coerceIn(rangeMin.toFloat(), chosenMax)
+                    invalidate()
                 } else if (currentTouchTarget == TouchTargets.rightThumb) {
-                    chosenMax = getActualValueFromPosition(event.x.coerceIn(barRect.left, barRect.right))
+                    chosenMax = getActualValueFromPosition(event.x).coerceIn(chosenMin, rangeMax.toFloat())
                     invalidate()
                 }
+
+                Log.d(TAG, "onTouchEvent: chosen min max = $chosenMin, $chosenMax")
+                Log.d(TAG, "onTouchEvent: selected ${getMinSelected()}, ${getMaxSelected()}")
             }
 
             MotionEvent.ACTION_UP,
