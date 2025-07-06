@@ -11,7 +11,9 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.content.res.TypedArrayUtils.getBoolean
 import androidx.core.content.withStyledAttributes
+import com.google.android.material.resources.MaterialResources.getDimensionPixelSize
 import com.laymanCodes.rangeSeekbar.R
 import com.laymanCodes.rangeSeekbar.enum.TouchTargets
 import com.laymanCodes.rangeSeekbar.px
@@ -94,6 +96,40 @@ class RangeSeekbarView : View {
         leftThumbRect = RectF()
         rightThumbRect = RectF()
     }
+
+
+    fun getBarHeight() = barHeight
+
+    fun getRangeMin() = rangeMin
+
+    fun getRangeMax() = rangeMax
+
+    fun getChosenMin() = chosenMin
+
+    fun getChosenMax() = chosenMax
+
+    fun setBarHeight(height: Float) {
+        barHeight = height
+    }
+
+    fun setRangeMin(rangeMin: Int) {
+        this.rangeMin = rangeMin
+    }
+
+    fun setRangeMax(rangeMax: Int) {
+        this.rangeMax = rangeMax
+    }
+
+    fun setChosenMin(chosenMin: Float) {
+        this.chosenMin = chosenMin
+        invalidate()
+    }
+
+    fun setChosenMax(chosenMax: Float) {
+        this.chosenMax = chosenMax
+        invalidate()
+    }
+
 
     private fun getAttributeFromXml(context: Context, attrs: AttributeSet?) {
         context.withStyledAttributes(attrs, R.styleable.RangeSeekbar) {
