@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 
-class MainActivity: AppCompatActivity(), RangeChangeListener {
+class   MainActivity: AppCompatActivity(), RangeChangeListener {
     private val TAG = MainActivity::class.java.canonicalName
 
     private var _binding: LayoutMainBinding? = null
@@ -29,6 +29,11 @@ class MainActivity: AppCompatActivity(), RangeChangeListener {
             setMin(0)
             setMax(1000)
             setRangeChangeListener(this@MainActivity)
+        }
+
+        binding.rangeBarView.apply {
+            setUseIntrinsicSize(true)
+            setBarHeight(50F)
         }
     }
 

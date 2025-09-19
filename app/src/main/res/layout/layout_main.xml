@@ -22,7 +22,7 @@
     <com.laymanCodes.rangeSeekbar.bars.RangeSeekbarView
         android:id="@+id/range_bar_view"
         android:layout_width="match_parent"
-        android:layout_height="20dp"
+        android:layout_height="70dp"
         android:layout_marginHorizontal="50dp"
         android:layout_marginTop="50dp"
         android:background="@color/black"

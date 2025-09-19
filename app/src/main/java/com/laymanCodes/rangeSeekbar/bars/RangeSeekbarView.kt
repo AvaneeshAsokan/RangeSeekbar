@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.text.method.Touch
@@ -69,6 +71,7 @@ class RangeSeekbarView : View {
     private var leftThumbTint: Int? = null
     private var rightThumbTint: Int? = null
     private var enablePushThumb: Boolean = false
+    private var useIntrinsicSize: Boolean = false
 
     private var cornerRadius: Float = 20.px.toFloat()
     private var barPadding: Float = 10.px.toFloat()
@@ -108,6 +111,8 @@ class RangeSeekbarView : View {
 
     fun getChosenMax() = chosenMax
 
+    fun isUseIntrinsicSize() = useIntrinsicSize
+
     fun setBarHeight(height: Float) {
         barHeight = height
     }
@@ -128,6 +133,10 @@ class RangeSeekbarView : View {
     fun setChosenMax(chosenMax: Float) {
         this.chosenMax = chosenMax
         invalidate()
+    }
+
+    fun setUseIntrinsicSize(useIntrinsicSize: Boolean) {
+        this.useIntrinsicSize = useIntrinsicSize
     }
 
 
@@ -192,7 +201,38 @@ class RangeSeekbarView : View {
 
         //  when calculating the actual left thumb value we must minus with the visual offset of barRect.left
 
-        canvas.drawRect(leftThumbRect, leftThumbPaint)
+        leftThumbDrawable?.let { leftThumb ->
+            if (useIntrinsicSize) {
+                // 1. Calculate the center X-coordinate for the thumb
+                val cx = getOnBar(chosenMin.roundToInt())
+
+                // 2. Calculate the top Y-coordinate to center it vertically
+                val cy = height / 2f
+
+                // 3. Use the drawable's intrinsic dimensions to calculate its bounds
+                val halfWidth = leftThumb.intrinsicWidth / 2
+                val halfHeight = leftThumb.intrinsicHeight / 2
+
+                val left = (cx - halfWidth).toInt()
+                val top = (cy - halfHeight).toInt()
+                val right = (cx + halfWidth).toInt()
+                val bottom = (cy + halfHeight).toInt()
+
+                // 4. Set the calculated bounds
+                leftThumb.setBounds(left, top, right, bottom)
+            } else {
+                leftThumb.setBounds(
+                    leftThumbRect.left.toInt(),
+                    leftThumbRect.top.toInt(),
+                    leftThumbRect.right.toInt(),
+                    leftThumbRect.bottom.toInt()
+                )
+            }
+            leftThumb.colorFilter = PorterDuffColorFilter(leftThumbPaint.color, PorterDuff.Mode.SRC_ATOP)
+            leftThumb.draw(canvas)
+        } ?: run {
+            canvas.drawRect(leftThumbRect, leftThumbPaint)
+        }
         Log.d(TAG, "setupLeftThumb: getMinSelected = ${getMinSelected()}")
     }
 
@@ -208,7 +248,38 @@ class RangeSeekbarView : View {
             bottom = height.toFloat()
         }
 
-        canvas.drawRect(rightThumbRect, rightThumbPaint)
+        rightThumbDrawable?.let { rightThumb ->
+            if (useIntrinsicSize) {
+                // 1. Calculate the center X-coordinate for the thumb
+                val cx = getOnBar(chosenMax.roundToInt())
+
+                // 2. Calculate the top Y-coordinate to center it vertically
+                val cy = height / 2f
+
+                // 3. Use the drawable's intrinsic dimensions to calculate its bounds
+                val halfWidth = rightThumb.intrinsicWidth / 2
+                val halfHeight = rightThumb.intrinsicHeight / 2
+
+                val left = (cx - halfWidth).toInt()
+                val top = (cy - halfHeight).toInt()
+                val right = (cx + halfWidth).toInt()
+                val bottom = (cy + halfHeight).toInt()
+
+                // 4. Set the calculated bounds
+                rightThumb.setBounds(left, top, right, bottom)
+            } else {
+                rightThumb.setBounds(
+                    rightThumbRect.left.toInt(),
+                    rightThumbRect.top.toInt(),
+                    rightThumbRect.right.toInt(),
+                    rightThumbRect.bottom.toInt()
+                )
+            }
+            rightThumb.colorFilter = PorterDuffColorFilter(rightThumbPaint.color, PorterDuff.Mode.SRC_ATOP)
+            rightThumb.draw(canvas)
+        } ?: run {
+            canvas.drawRect(rightThumbRect, rightThumbPaint)
+        }
         Log.d(TAG, "setupRightThumb: getMaxSelected = ${getMaxSelected()}")
     }
 
