@@ -2,7 +2,9 @@ package com.laymanCodes.rangeSeekbar
 
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import androidx.appcompat.app.AppCompatActivity
+import com.laymanCodes.rangeSeekbar.bars.RangeSeekbarView
 import com.laymanCodes.rangeSeekbar.databinding.LayoutMainBinding
 import com.laymanCodes.rangeSeekbar.listener.RangeChangeListener
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +36,7 @@ class   MainActivity: AppCompatActivity(), RangeChangeListener {
         binding.rangeBarView.apply {
             setUseIntrinsicSize(true)
             setBarHeight(50F)
+            setThumbGravity(Gravity.BOTTOM)
         }
     }
 

@@ -11,8 +11,10 @@ import android.graphics.drawable.Drawable
 import android.text.method.Touch
 import android.util.AttributeSet
 import android.util.Log
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import androidx.annotation.IntDef
 import androidx.core.content.res.TypedArrayUtils.getBoolean
 import androidx.core.content.withStyledAttributes
 import com.google.android.material.resources.MaterialResources.getDimensionPixelSize
@@ -61,6 +63,12 @@ class RangeSeekbarView : View {
         initSetup()
     }
 
+    @IntDef(flag = true, value = [
+        Gravity.TOP, Gravity.BOTTOM, Gravity.CENTER
+    ])
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class GravityInt
+
     private var leftThumbDrawable: Drawable? = null
     private var rightThumbDrawable: Drawable? = null
     private var leftThumbWidth: Int = 20.px
@@ -72,6 +80,7 @@ class RangeSeekbarView : View {
     private var rightThumbTint: Int? = null
     private var enablePushThumb: Boolean = false
     private var useIntrinsicSize: Boolean = false
+    private var thumbGravity = Gravity.CENTER
 
     private var cornerRadius: Float = 20.px.toFloat()
     private var barPadding: Float = 10.px.toFloat()
@@ -113,6 +122,8 @@ class RangeSeekbarView : View {
 
     fun isUseIntrinsicSize() = useIntrinsicSize
 
+    fun getGravity() = thumbGravity
+
     fun setBarHeight(height: Float) {
         barHeight = height
     }
@@ -137,6 +148,10 @@ class RangeSeekbarView : View {
 
     fun setUseIntrinsicSize(useIntrinsicSize: Boolean) {
         this.useIntrinsicSize = useIntrinsicSize
+    }
+
+    fun setThumbGravity(@GravityInt gravity: Int) {
+        thumbGravity = gravity
     }
 
 
@@ -192,45 +207,61 @@ class RangeSeekbarView : View {
     ) {
         leftThumbPaint.color = leftThumbTint ?: Color.CYAN
 
-        leftThumbRect.apply {
-            left = getOnBar(chosenMin.roundToInt()) - leftThumbWidth.toFloat()/2
-            top = 0f
-            right = left + leftThumbWidth.toFloat()
-            bottom = height.toFloat()
+        val thumbCenterX = getOnBar(chosenMin.roundToInt())
+
+        val currentThumbDrawWidth = if (useIntrinsicSize && leftThumbDrawable != null) {
+            leftThumbDrawable!!.intrinsicWidth.toFloat()
+        } else {
+            leftThumbWidth.toFloat() // from attribute R.styleable.RangeSeekbar_leftThumbWidth
+        }
+        val currentThumbDrawHeight = if (useIntrinsicSize && leftThumbDrawable != null) {
+            leftThumbDrawable!!.intrinsicHeight.toFloat()
+        } else {
+            leftThumbHeight.toFloat() // from attribute R.styleable.RangeSeekbar_leftThumbHeight
+        }
+        
+        val actualThumbTop: Float
+        val actualThumbBottom: Float
+
+        when (thumbGravity) {
+            Gravity.TOP -> {
+                actualThumbTop = barRect.top
+                actualThumbBottom = barRect.top + currentThumbDrawHeight
+            }
+            Gravity.BOTTOM -> {
+                actualThumbBottom = barRect.bottom
+                actualThumbTop = barRect.bottom - currentThumbDrawHeight
+            }
+            Gravity.CENTER -> { // Also Gravity.CENTER_VERTICAL or default
+                val barCenterY = barRect.centerY()
+                actualThumbTop = barCenterY - currentThumbDrawHeight / 2f
+                actualThumbBottom = barCenterY + currentThumbDrawHeight / 2f
+            }
+            else -> { // Fallback, though thumbGravity is annotated and defaulted
+                val barCenterY = barRect.centerY()
+                actualThumbTop = barCenterY - currentThumbDrawHeight / 2f
+                actualThumbBottom = barCenterY + currentThumbDrawHeight / 2f
+                Log.w(TAG, "setupLeftThumb: Unknown thumbGravity '$thumbGravity', defaulting to CENTER")
+            }
         }
 
-        //  when calculating the actual left thumb value we must minus with the visual offset of barRect.left
+        val actualThumbLeft = thumbCenterX - currentThumbDrawWidth / 2f
+        val actualThumbRight = thumbCenterX + currentThumbDrawWidth / 2f
+        
+        // This rect is used for touch detection and for drawing the fallback shape.
+        leftThumbRect.set(actualThumbLeft, actualThumbTop, actualThumbRight, actualThumbBottom)
 
         leftThumbDrawable?.let { leftThumb ->
-            if (useIntrinsicSize) {
-                // 1. Calculate the center X-coordinate for the thumb
-                val cx = getOnBar(chosenMin.roundToInt())
-
-                // 2. Calculate the top Y-coordinate to center it vertically
-                val cy = height / 2f
-
-                // 3. Use the drawable's intrinsic dimensions to calculate its bounds
-                val halfWidth = leftThumb.intrinsicWidth / 2
-                val halfHeight = leftThumb.intrinsicHeight / 2
-
-                val left = (cx - halfWidth).toInt()
-                val top = (cy - halfHeight).toInt()
-                val right = (cx + halfWidth).toInt()
-                val bottom = (cy + halfHeight).toInt()
-
-                // 4. Set the calculated bounds
-                leftThumb.setBounds(left, top, right, bottom)
-            } else {
-                leftThumb.setBounds(
-                    leftThumbRect.left.toInt(),
-                    leftThumbRect.top.toInt(),
-                    leftThumbRect.right.toInt(),
-                    leftThumbRect.bottom.toInt()
-                )
-            }
+            leftThumb.setBounds(
+                leftThumbRect.left.toInt(),
+                leftThumbRect.top.toInt(),
+                leftThumbRect.right.toInt(),
+                leftThumbRect.bottom.toInt()
+            )
             leftThumb.colorFilter = PorterDuffColorFilter(leftThumbPaint.color, PorterDuff.Mode.SRC_ATOP)
             leftThumb.draw(canvas)
         } ?: run {
+            // Fallback: draw a rect using the bounds now correctly set in leftThumbRect
             canvas.drawRect(leftThumbRect, leftThumbPaint)
         }
         Log.d(TAG, "setupLeftThumb: getMinSelected = ${getMinSelected()}")
@@ -241,43 +272,67 @@ class RangeSeekbarView : View {
     ) {
         rightThumbPaint.color = rightThumbTint ?: Color.CYAN
 
-        rightThumbRect.apply {
-            left = getOnBar(chosenMax.roundToInt()) - rightThumbWidth.toFloat()/2
-            top = 0f
-            right = getOnBar(chosenMax.roundToInt()) + rightThumbWidth.toFloat()/2
-            bottom = height.toFloat()
+        // 1. Calculate horizontal center position for the thumb
+        val thumbCenterX = getOnBar(chosenMax.roundToInt())
+
+        // 2. Determine thumb's effective drawing width and height
+        val currentThumbDrawWidth = if (useIntrinsicSize && rightThumbDrawable != null) {
+            rightThumbDrawable!!.intrinsicWidth.toFloat()
+        } else {
+            rightThumbWidth.toFloat() // from attribute R.styleable.RangeSeekbar_rightThumbWidth
+        }
+        val currentThumbDrawHeight = if (useIntrinsicSize && rightThumbDrawable != null) {
+            rightThumbDrawable!!.intrinsicHeight.toFloat()
+        } else {
+            rightThumbHeight.toFloat() // from attribute R.styleable.RangeSeekbar_rightThumbHeight
         }
 
-        rightThumbDrawable?.let { rightThumb ->
-            if (useIntrinsicSize) {
-                // 1. Calculate the center X-coordinate for the thumb
-                val cx = getOnBar(chosenMax.roundToInt())
+        // 3. Calculate vertical position based on thumbGravity and barRect
+        val actualThumbTop: Float
+        val actualThumbBottom: Float
 
-                // 2. Calculate the top Y-coordinate to center it vertically
-                val cy = height / 2f
-
-                // 3. Use the drawable's intrinsic dimensions to calculate its bounds
-                val halfWidth = rightThumb.intrinsicWidth / 2
-                val halfHeight = rightThumb.intrinsicHeight / 2
-
-                val left = (cx - halfWidth).toInt()
-                val top = (cy - halfHeight).toInt()
-                val right = (cx + halfWidth).toInt()
-                val bottom = (cy + halfHeight).toInt()
-
-                // 4. Set the calculated bounds
-                rightThumb.setBounds(left, top, right, bottom)
-            } else {
-                rightThumb.setBounds(
-                    rightThumbRect.left.toInt(),
-                    rightThumbRect.top.toInt(),
-                    rightThumbRect.right.toInt(),
-                    rightThumbRect.bottom.toInt()
-                )
+        when (thumbGravity) {
+            Gravity.TOP -> {
+                actualThumbTop = barRect.top
+                actualThumbBottom = barRect.top + currentThumbDrawHeight
             }
+            Gravity.BOTTOM -> {
+                actualThumbBottom = barRect.bottom
+                actualThumbTop = barRect.bottom - currentThumbDrawHeight
+            }
+            Gravity.CENTER -> { // Also Gravity.CENTER_VERTICAL or default
+                val barCenterY = barRect.centerY()
+                actualThumbTop = barCenterY - currentThumbDrawHeight / 2f
+                actualThumbBottom = barCenterY + currentThumbDrawHeight / 2f
+            }
+            else -> { // Fallback, though thumbGravity is annotated and defaulted
+                val barCenterY = barRect.centerY()
+                actualThumbTop = barCenterY - currentThumbDrawHeight / 2f
+                actualThumbBottom = barCenterY + currentThumbDrawHeight / 2f
+                Log.w(TAG, "setupRightThumb: Unknown thumbGravity '$thumbGravity', defaulting to CENTER")
+            }
+        }
+
+        // 4. Calculate actual horizontal bounds for drawing
+        val actualThumbLeft = thumbCenterX - currentThumbDrawWidth / 2f
+        val actualThumbRight = thumbCenterX + currentThumbDrawWidth / 2f
+
+        // 5. Update rightThumbRect to reflect the actual calculated bounds.
+        // This rect is used for touch detection and for drawing the fallback shape.
+        rightThumbRect.set(actualThumbLeft, actualThumbTop, actualThumbRight, actualThumbBottom)
+
+        // 6. Draw the thumb drawable or a fallback rectangle
+        rightThumbDrawable?.let { rightThumb ->
+            rightThumb.setBounds(
+                rightThumbRect.left.toInt(),
+                rightThumbRect.top.toInt(),
+                rightThumbRect.right.toInt(),
+                rightThumbRect.bottom.toInt()
+            )
             rightThumb.colorFilter = PorterDuffColorFilter(rightThumbPaint.color, PorterDuff.Mode.SRC_ATOP)
             rightThumb.draw(canvas)
         } ?: run {
+            // Fallback: draw a rect using the bounds now correctly set in rightThumbRect
             canvas.drawRect(rightThumbRect, rightThumbPaint)
         }
         Log.d(TAG, "setupRightThumb: getMaxSelected = ${getMaxSelected()}")
