@@ -1,6 +1,21 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    id("maven-publish")
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<org.gradle.api.publish.maven.MavenPublication>("release") {
+                groupId = "com.github.AvaneeshAsokan"
+                artifactId = "RangeSeekbar"
+                version = project.version.toString()
+
+                from(components["release"])
+            }
+        }
+    }
 }
 
 android {
@@ -38,7 +53,7 @@ android {
     }
 }
 
-version = "1.0.0"
+version = "1.0.1"
 
 base.archivesName.set("laymanCodes-rangeSeekbar-${version}")
 
