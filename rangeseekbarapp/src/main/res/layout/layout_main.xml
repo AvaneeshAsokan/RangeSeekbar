@@ -26,6 +26,8 @@
         android:layout_marginHorizontal="50dp"
         android:layout_marginTop="50dp"
         android:background="@color/black"
+        app:barHeight="40dp"
+        app:barPadding="10dp"
         app:enablePushThumb="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

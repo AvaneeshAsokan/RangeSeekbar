@@ -1,18 +1,12 @@
-package com.laymanCodes.rangeSeekbar
+package com.laymancodes.rangeseekbarapp
 
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import androidx.appcompat.app.AppCompatActivity
-import com.laymanCodes.rangeSeekbar.bars.RangeSeekbarView
-import com.laymanCodes.rangeSeekbar.databinding.LayoutMainBinding
 import com.laymanCodes.rangeSeekbar.listener.RangeChangeListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.yield
+import com.laymanCodes.rangeSeekbar.px
+import com.laymancodes.rangeseekbarapp.databinding.LayoutMainBinding
 
 class   MainActivity: AppCompatActivity(), RangeChangeListener {
     private val TAG = MainActivity::class.java.canonicalName
@@ -35,7 +29,7 @@ class   MainActivity: AppCompatActivity(), RangeChangeListener {
 
         binding.rangeBarView.apply {
             setUseIntrinsicSize(true)
-            setBarHeight(50F)
+            setBarHeight(40.px.toFloat())
             setThumbGravity(Gravity.BOTTOM)
         }
     }

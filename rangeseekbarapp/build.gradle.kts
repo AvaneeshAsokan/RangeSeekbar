@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    namespace = "com.laymanCodes.rangeSeekbar"
+    namespace = "com.laymancodes.rangeseekbarapp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.laymanCodes.rangeSeekbar"
-        minSdk = 24
+        applicationId = "com.laymancodes.rangeseekbarapp"
+        minSdk = 31
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -43,6 +43,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+
+    implementation(project(":library"))
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
