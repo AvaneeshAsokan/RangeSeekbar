@@ -38,7 +38,7 @@ android {
     }
 }
 
-version = "0.0.1"
+version = "1.0.0"
 
 base.archivesName.set("laymanCodes-rangeSeekbar-${version}")
 
