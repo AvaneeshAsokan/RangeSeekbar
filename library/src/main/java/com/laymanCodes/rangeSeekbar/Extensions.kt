@@ -1,3 +1,9 @@
+/*
+ * Project Name: RangeSeekBar
+ * Created by: Avaneesh Asokan
+ * Last Modified: 07/06/2025, 12:07
+ */
+
 package com.laymanCodes.rangeSeekbar
 
 import android.content.res.Resources

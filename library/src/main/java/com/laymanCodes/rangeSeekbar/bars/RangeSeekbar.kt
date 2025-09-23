@@ -1,3 +1,9 @@
+/*
+ * Project Name: RangeSeekBar
+ * Created by: Avaneesh Asokan
+ * Last Modified: 09/06/2025, 21:54
+ */
+
 package com.laymanCodes.rangeSeekbar.bars
 
 import android.annotation.SuppressLint
