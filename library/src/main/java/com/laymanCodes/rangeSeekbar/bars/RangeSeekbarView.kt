@@ -23,7 +23,7 @@ import com.laymanCodes.rangeSeekbar.enum.TouchTargets
 import com.laymanCodes.rangeSeekbar.px
 import kotlin.math.roundToInt
 
-class RangeSeekbarView : View {
+public class RangeSeekbarView : View {
 
     private val TAG = RangeSeekbarView::class.java.canonicalName
 
@@ -163,8 +163,9 @@ class RangeSeekbarView : View {
             leftThumbWidth = getDimensionPixelSize(R.styleable.RangeSeekbar_leftThumbWidth, 20.px)
             rightThumbWidth = getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbWidth, 20.px)
             leftThumbHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_leftThumbHeight, 20.px)
-            rightThumbHeight =
-                getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbHeight, 20.px)
+            rightThumbHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbHeight, 20.px)
+            barHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_barHeight, 20.px).toFloat()
+            barPadding = getDimensionPixelSize(R.styleable.RangeSeekbar_barPadding, 10.px).toFloat()
 
             gap = getDimensionPixelSize(R.styleable.RangeSeekbar_gap, 5.px)
 
