@@ -99,6 +99,10 @@ public class RangeSeekbarView : View {
     private var chosenMin: Float = rangeMin.toFloat()        //  actual chosen min value
     private var chosenMax: Float = rangeMax.toFloat()        //  actual chosen max value
 
+    private var disableLeftThumbTouch: Boolean = false
+
+    private var disableRightThumbTouch: Boolean = false
+
     private var currentTouchTarget: TouchTargets = TouchTargets.none
 
     private lateinit var barPaint: Paint
@@ -142,6 +146,10 @@ public class RangeSeekbarView : View {
     fun getRThumbHeight() = rightThumbHeight
 
     fun getTrackColor() = trackColor
+
+    fun isLeftTouchDisabled() = disableLeftThumbTouch
+
+    fun isRightTouchDisabled() = disableRightThumbTouch
 
     fun setTrackHeight(newHeight: Int) {
         trackHeight = newHeight
@@ -201,6 +209,19 @@ public class RangeSeekbarView : View {
         rightThumbDrawable = drawable
     }
 
+    fun disableTouch(disable: Boolean){
+        disableLeftThumbTouch = disable
+        disableRightThumbTouch = disable
+    }
+
+    fun disableLeftThumbTouch(disable: Boolean){
+        disableLeftThumbTouch = disable
+    }
+
+    fun disableRightThumbTouch(disable: Boolean){
+        disableRightThumbTouch = disable
+    }
+
     private fun getAttributeFromXml(context: Context, attrs: AttributeSet?) {
         context.withStyledAttributes(attrs, R.styleable.RangeSeekbar) {
             leftThumbDrawable = getDrawable(R.styleable.RangeSeekbar_leftThumbDrawable)
@@ -227,6 +248,8 @@ public class RangeSeekbarView : View {
             }
 
             enablePushThumb = getBoolean(R.styleable.RangeSeekbar_enablePushThumb, false)
+            disableLeftThumbTouch = getBoolean(R.styleable.RangeSeekbar_disableLeftThumbTouch, false)
+            disableRightThumbTouch = getBoolean(R.styleable.RangeSeekbar_disableRightThumbTouch, false)
         }
     }
 
@@ -478,6 +501,12 @@ public class RangeSeekbarView : View {
             }
 
             MotionEvent.ACTION_MOVE -> {
+                //  in case touch is disabled
+                if (disableLeftThumbTouch && currentTouchTarget == TouchTargets.leftThumb ||
+                    disableRightThumbTouch && currentTouchTarget == TouchTargets.rightThumb) {
+                    return true
+                }
+
                 if (currentTouchTarget == TouchTargets.leftThumb) {
                     chosenMin = getActualValueFromPosition(event.x).coerceIn(rangeMin.toFloat(), chosenMax)
                     invalidate()

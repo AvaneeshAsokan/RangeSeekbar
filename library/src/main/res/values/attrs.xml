@@ -19,5 +19,8 @@
         <attr name="barColor" format="reference|color"/>
         <attr name="trackColor" format="reference|color"/>
         <attr name="barDrawable" format="reference"/>
+
+        <attr name="disableLeftThumbTouch" format="boolean"/>
+        <attr name="disableRightThumbTouch" format="boolean"/>
     </declare-styleable>
 </resources>

@@ -31,6 +31,7 @@
         app:rangeTrackHeight="match_parent"
         app:barPadding="10dp"
         app:enablePushThumb="false"
+        app:disableRightThumbTouch="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/range_bar"
