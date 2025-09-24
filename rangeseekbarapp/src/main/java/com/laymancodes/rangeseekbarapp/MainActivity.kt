@@ -31,6 +31,10 @@ class   MainActivity: AppCompatActivity(), RangeChangeListener {
             setUseIntrinsicSize(true)
 //            setBarHeight(40.px.toFloat())
             setThumbGravity(Gravity.BOTTOM)
+            setLeftThumbDrawable(resources.getDrawable(R.drawable.ic_triangle_green, context?.theme))
+            setRightThumbDrawable(resources.getDrawable(R.drawable.ic_triangle_red, context?.theme))
+            setTrackColor(resources.getColor(R.color.purple_200, context?.theme))
+            setTrackHeight(-1)  //  for match_parent
         }
     }
 
