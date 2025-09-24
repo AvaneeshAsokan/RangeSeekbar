@@ -29,7 +29,7 @@ class   MainActivity: AppCompatActivity(), RangeChangeListener {
 
         binding.rangeBarView.apply {
             setUseIntrinsicSize(true)
-            setBarHeight(40.px.toFloat())
+//            setBarHeight(40.px.toFloat())
             setThumbGravity(Gravity.BOTTOM)
         }
     }
