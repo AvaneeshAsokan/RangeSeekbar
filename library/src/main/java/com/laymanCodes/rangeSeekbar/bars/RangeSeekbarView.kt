@@ -31,7 +31,9 @@ public class RangeSeekbarView : View {
 
     private val TAG = RangeSeekbarView::class.java.canonicalName
 
-    constructor(context: Context) : super(context)
+    constructor(context: Context) : super(context) {
+        initialize(context, null)
+    }
 
     constructor(context: Context, attrs: AttributeSet? = null) : super(context, attrs) {
         initialize(context, attrs)
@@ -142,11 +144,7 @@ public class RangeSeekbarView : View {
     fun getTrackColor() = trackColor
 
     fun setTrackHeight(newHeight: Int) {
-        trackHeight = if (newHeight == -1){
-            height
-        } else {
-            newHeight
-        }
+        trackHeight = newHeight
     }
 
     fun setRangeMin(rangeMin: Int) {
@@ -195,6 +193,14 @@ public class RangeSeekbarView : View {
         trackColor = color
     }
 
+    fun setLeftThumbDrawable(drawable: Drawable) {
+        leftThumbDrawable = drawable
+    }
+
+    fun setRightThumbDrawable(drawable: Drawable) {
+        rightThumbDrawable = drawable
+    }
+
     private fun getAttributeFromXml(context: Context, attrs: AttributeSet?) {
         context.withStyledAttributes(attrs, R.styleable.RangeSeekbar) {
             leftThumbDrawable = getDrawable(R.styleable.RangeSeekbar_leftThumbDrawable)
@@ -213,8 +219,12 @@ public class RangeSeekbarView : View {
 
             gap = getDimensionPixelSize(R.styleable.RangeSeekbar_gap, 5.px)
 
-            leftThumbTint = getColor(R.styleable.RangeSeekbar_leftThumbTintColor, Color.CYAN)
-            rightThumbTint = getColor(R.styleable.RangeSeekbar_rightThumbTintColor, Color.CYAN)
+            if (hasValue(R.styleable.RangeSeekbar_leftThumbTintColor)) {
+                leftThumbTint = getColor(R.styleable.RangeSeekbar_leftThumbTintColor, Color.CYAN)
+            }
+            if (hasValue(R.styleable.RangeSeekbar_rightThumbTintColor)) {
+                rightThumbTint = getColor(R.styleable.RangeSeekbar_rightThumbTintColor, Color.CYAN)
+            }
 
             enablePushThumb = getBoolean(R.styleable.RangeSeekbar_enablePushThumb, false)
         }
@@ -298,7 +308,7 @@ public class RangeSeekbarView : View {
                 val barCenterY = barRect.centerY()
                 actualThumbTop = barCenterY - currentThumbDrawHeight / 2f
                 actualThumbBottom = barCenterY + currentThumbDrawHeight / 2f
-                Log.w(TAG, "setupLeftThumb: Unknown thumbGravity '$thumbGravity', defaulting to CENTER")
+//                Log.w(TAG, "setupLeftThumb: Unknown thumbGravity '$thumbGravity', defaulting to CENTER")
             }
         }
 
@@ -315,13 +325,18 @@ public class RangeSeekbarView : View {
                 leftThumbRect.right.toInt(),
                 leftThumbRect.bottom.toInt()
             )
-            leftThumb.colorFilter = PorterDuffColorFilter(leftThumbPaint.color, PorterDuff.Mode.SRC_ATOP)
+            leftThumbTint?.let { tintColor ->
+                leftThumb.colorFilter = PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_ATOP)
+            } ?: run {
+                // Otherwise, clear the color filter to use the drawable's original color
+                leftThumb.clearColorFilter()
+            }
             leftThumb.draw(canvas)
         } ?: run {
             // Fallback: draw a rect using the bounds now correctly set in leftThumbRect
             canvas.drawRect(leftThumbRect, leftThumbPaint)
         }
-        Log.d(TAG, "setupLeftThumb: getMinSelected = ${getMinSelected()}")
+//        Log.d(TAG, "setupLeftThumb: getMinSelected = ${getMinSelected()}")
     }
 
     private fun setupRightThumb(
@@ -374,7 +389,7 @@ public class RangeSeekbarView : View {
                 val barCenterY = barRect.centerY()
                 actualThumbTop = barCenterY - currentThumbDrawHeight / 2f
                 actualThumbBottom = barCenterY + currentThumbDrawHeight / 2f
-                Log.w(TAG, "setupRightThumb: Unknown thumbGravity '$thumbGravity', defaulting to CENTER")
+//                Log.w(TAG, "setupRightThumb: Unknown thumbGravity '$thumbGravity', defaulting to CENTER")
             }
         }
 
@@ -394,13 +409,18 @@ public class RangeSeekbarView : View {
                 rightThumbRect.right.toInt(),
                 rightThumbRect.bottom.toInt()
             )
-            rightThumb.colorFilter = PorterDuffColorFilter(rightThumbPaint.color, PorterDuff.Mode.SRC_ATOP)
+            rightThumbTint?.let { tintColor ->
+                rightThumb.colorFilter = PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_ATOP)
+            } ?: run {
+                // Otherwise, clear the color filter to use the drawable's original color
+                rightThumb.clearColorFilter()
+            }
             rightThumb.draw(canvas)
         } ?: run {
             // Fallback: draw a rect using the bounds now correctly set in rightThumbRect
             canvas.drawRect(rightThumbRect, rightThumbPaint)
         }
-        Log.d(TAG, "setupRightThumb: getMaxSelected = ${getMaxSelected()}")
+//        Log.d(TAG, "setupRightThumb: getMaxSelected = ${getMaxSelected()}")
     }
 
     private fun drawTrack(canvas: Canvas, paint: Paint, rectF: RectF) {
@@ -412,25 +432,39 @@ public class RangeSeekbarView : View {
      */
     private fun getOnBar(value: Int): Float {
         //  find the position of the value based on the width of the bar
-        if (value in rangeMin..rangeMax) {
-            return (((value.toFloat() / rangeMax) * barRect.width()) + barRect.left)
-        } else {
-            throw IllegalArgumentException("Chosen value is out of range.")
+//        return (((value.coerceIn(rangeMin, rangeMax).toFloat() / rangeMax) * barRect.width()) + barRect.left)
+        val currentVal = value.coerceIn(rangeMin, rangeMax)
+        val range = (rangeMax - rangeMin).toFloat()
+
+        if (range == 0F){
+            return barRect.left
         }
+
+        val percentage = (currentVal - rangeMin) / range
+        return (percentage * barRect.width()) + barRect.left
     }
 
     private fun getActualValueFromPosition(xPosition: Float): Float {
-        return (((xPosition - barRect.left) * rangeMax) / barRect.width()).coerceIn(
+        /*return (((xPosition - barRect.left) * rangeMax) / barRect.width()).coerceIn(
             rangeMin.toFloat(),
             rangeMax.toFloat()
-        )
+        )*/
+
+        val coercedX = xPosition.coerceIn(barRect.left, barRect.right)
+        val range = (rangeMax - rangeMin).toFloat()
+
+        if (barRect.width() == 0F){
+            return rangeMin.toFloat()
+        }
+
+        val percentage = (coercedX - barRect.left) / barRect.width()
+        return (percentage * range) + rangeMin
+
     }
 
-    fun getMinSelected(): Int =
-        (((leftThumbRect.centerX() - barRect.left) * rangeMax) / barRect.width()).roundToInt()
+    fun getMinSelected(): Int = getActualValueFromPosition(leftThumbRect.centerX()).roundToInt()
 
-    fun getMaxSelected(): Int =
-        (((rightThumbRect.centerX() - barRect.left) * rangeMax) / barRect.width()).roundToInt()
+    fun getMaxSelected(): Int = getActualValueFromPosition(rightThumbRect.centerX()).roundToInt()
 
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -440,7 +474,7 @@ public class RangeSeekbarView : View {
         when (action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
                 currentTouchTarget = findPressedThumb(event)
-                Log.d(TAG, "onTouchEvent: touched = ${currentTouchTarget.name}")
+//                Log.d(TAG, "onTouchEvent: touched = ${currentTouchTarget.name}")
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -452,8 +486,8 @@ public class RangeSeekbarView : View {
                     invalidate()
                 }
 
-                Log.d(TAG, "onTouchEvent: chosen min max = $chosenMin, $chosenMax")
-                Log.d(TAG, "onTouchEvent: selected ${getMinSelected()}, ${getMaxSelected()}")
+//                Log.d(TAG, "onTouchEvent: chosen min max = $chosenMin, $chosenMax")
+//                Log.d(TAG, "onTouchEvent: selected ${getMinSelected()}, ${getMaxSelected()}")
             }
 
             MotionEvent.ACTION_UP,
