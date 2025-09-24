@@ -10,7 +10,9 @@
         <attr name="leftThumbHeight" format="dimension"/>
         <attr name="rightThumbWidth" format="dimension"/>
         <attr name="rightThumbHeight" format="dimension"/>
-        <attr name="barHeight" format="dimension"/>
+        <attr name="barHeight" format="dimension">
+            <enum name="match_parent" value="-1" />
+        </attr>
         <attr name="barPadding" format="dimension"/>
         <attr name="gap" format="dimension"/>
         <attr name="enablePushThumb" format="boolean"/>

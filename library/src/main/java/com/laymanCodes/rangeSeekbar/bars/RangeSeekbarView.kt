@@ -14,16 +14,13 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
-import android.text.method.Touch
 import android.util.AttributeSet
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.IntDef
-import androidx.core.content.res.TypedArrayUtils.getBoolean
 import androidx.core.content.withStyledAttributes
-import com.google.android.material.resources.MaterialResources.getDimensionPixelSize
 import com.laymanCodes.rangeSeekbar.R
 import com.laymanCodes.rangeSeekbar.enum.TouchTargets
 import com.laymanCodes.rangeSeekbar.px
@@ -64,7 +61,7 @@ public class RangeSeekbarView : View {
     private fun initialize(context: Context, attrs: AttributeSet?) {
         this.cornerRadius = 5.px.toFloat()
         this.barPadding = 10.px.toFloat()
-        this.barHeight = 10.px.toFloat()
+        this.barHeight = 10.px
         getAttributeFromXml(context, attrs)
         initSetup()
     }
@@ -90,7 +87,7 @@ public class RangeSeekbarView : View {
 
     private var cornerRadius: Float = 20.px.toFloat()
     private var barPadding: Float = 10.px.toFloat()
-    private var barHeight: Float = 30.px.toFloat()
+    private var barHeight: Int = 30.px
     private var rangeMin: Int = 0               //  min range choose-able
     private var rangeMax: Int = 1000             //  max range choose-able
     private var chosenMin: Float = rangeMin.toFloat()        //  actual chosen min value
@@ -130,8 +127,20 @@ public class RangeSeekbarView : View {
 
     fun getGravity() = thumbGravity
 
-    fun setBarHeight(height: Float) {
-        barHeight = height
+    fun getLThumbWidth() = leftThumbWidth
+
+    fun getRThumbWidth() = rightThumbWidth
+
+    fun getLThumbHeight() = leftThumbHeight
+
+    fun getRThumbHeight() = rightThumbHeight
+
+    fun setBarHeight(newHeight: Int) {
+        barHeight = if (newHeight == -1){
+            height
+        } else {
+            newHeight
+        }
     }
 
     fun setRangeMin(rangeMin: Int) {
@@ -160,6 +169,21 @@ public class RangeSeekbarView : View {
         thumbGravity = gravity
     }
 
+    fun setLThumbWidth(width: Int) {
+        leftThumbWidth = width
+    }
+
+    fun setRThumbWidth(width: Int) {
+        rightThumbWidth = width
+    }
+
+    fun setLThumbHeight(height: Int) {
+        leftThumbHeight = height
+    }
+
+    fun setRThumbHeight(height: Int) {
+        rightThumbHeight = height
+    }
 
     private fun getAttributeFromXml(context: Context, attrs: AttributeSet?) {
         context.withStyledAttributes(attrs, R.styleable.RangeSeekbar) {
@@ -170,7 +194,7 @@ public class RangeSeekbarView : View {
             rightThumbWidth = getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbWidth, 20.px)
             leftThumbHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_leftThumbHeight, 20.px)
             rightThumbHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbHeight, 20.px)
-            barHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_barHeight, 20.px).toFloat()
+            barHeight = getLayoutDimension(R.styleable.RangeSeekbar_barHeight, 20.px)
             barPadding = getDimensionPixelSize(R.styleable.RangeSeekbar_barPadding, 10.px).toFloat()
 
             gap = getDimensionPixelSize(R.styleable.RangeSeekbar_gap, 5.px)
@@ -199,6 +223,10 @@ public class RangeSeekbarView : View {
             color = context.getColor(R.color.track_gray)
         }
 
+        if (barHeight == -1){
+            barHeight = height
+        }
+
         barRect.apply {
             left = barPadding
             top = (height - barHeight) * .5f
@@ -216,15 +244,23 @@ public class RangeSeekbarView : View {
 
         val thumbCenterX = getOnBar(chosenMin.roundToInt())
 
-        val currentThumbDrawWidth = if (useIntrinsicSize && leftThumbDrawable != null) {
-            leftThumbDrawable!!.intrinsicWidth.toFloat()
+        val currentThumbDrawWidth = if (leftThumbDrawable != null) {
+            if (useIntrinsicSize) {
+                leftThumbDrawable!!.intrinsicWidth.toFloat()
+            } else {
+                leftThumbWidth.toFloat() // from attribute R.styleable.RangeSeekbar_leftThumbWidth
+            }
         } else {
-            leftThumbWidth.toFloat() // from attribute R.styleable.RangeSeekbar_leftThumbWidth
+            0.toFloat() // from attribute R.styleable.RangeSeekbar_leftThumbWidth
         }
-        val currentThumbDrawHeight = if (useIntrinsicSize && leftThumbDrawable != null) {
-            leftThumbDrawable!!.intrinsicHeight.toFloat()
+        val currentThumbDrawHeight = if (leftThumbDrawable != null) {
+            if (useIntrinsicSize) {
+                leftThumbDrawable!!.intrinsicHeight.toFloat()
+            } else {
+                leftThumbHeight.toFloat() // from attribute R.styleable.RangeSeekbar_leftThumbHeight
+            }
         } else {
-            leftThumbHeight.toFloat() // from attribute R.styleable.RangeSeekbar_leftThumbHeight
+            0.toFloat() // from attribute R.styleable.RangeSeekbar_leftThumbHeight
         }
         
         val actualThumbTop: Float
@@ -283,15 +319,23 @@ public class RangeSeekbarView : View {
         val thumbCenterX = getOnBar(chosenMax.roundToInt())
 
         // 2. Determine thumb's effective drawing width and height
-        val currentThumbDrawWidth = if (useIntrinsicSize && rightThumbDrawable != null) {
-            rightThumbDrawable!!.intrinsicWidth.toFloat()
+        val currentThumbDrawWidth = if (rightThumbDrawable != null) {
+            if (useIntrinsicSize) {
+                rightThumbDrawable!!.intrinsicWidth.toFloat()
+            } else {
+                rightThumbWidth.toFloat() // from attribute R.styleable.RangeSeekbar_rightThumbWidth
+            }
         } else {
-            rightThumbWidth.toFloat() // from attribute R.styleable.RangeSeekbar_rightThumbWidth
+            0.toFloat() // from attribute R.styleable.RangeSeekbar_rightThumbWidth
         }
-        val currentThumbDrawHeight = if (useIntrinsicSize && rightThumbDrawable != null) {
-            rightThumbDrawable!!.intrinsicHeight.toFloat()
+        val currentThumbDrawHeight = if (rightThumbDrawable != null) {
+            if (useIntrinsicSize) {
+                rightThumbDrawable!!.intrinsicHeight.toFloat()
+            } else {
+                rightThumbHeight.toFloat() // from attribute R.styleable.RangeSeekbar_rightThumbHeight
+            }
         } else {
-            rightThumbHeight.toFloat() // from attribute R.styleable.RangeSeekbar_rightThumbHeight
+            0.toFloat() // from attribute R.styleable.RangeSeekbar_rightThumbHeight
         }
 
         // 3. Calculate vertical position based on thumbGravity and barRect
