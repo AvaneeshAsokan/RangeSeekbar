@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="RangeSeekbar">
-        <attr name="trackColor" format="color"/>
         <attr name="leftThumbTintColor" format="reference|color"/>
         <attr name="rightThumbTintColor" format="reference|color"/>
         <attr name="leftThumbDrawable" format="reference"/>
@@ -10,11 +9,15 @@
         <attr name="leftThumbHeight" format="dimension"/>
         <attr name="rightThumbWidth" format="dimension"/>
         <attr name="rightThumbHeight" format="dimension"/>
-        <attr name="barHeight" format="dimension">
+        <attr name="gap" format="dimension"/>
+        <attr name="enablePushThumb" format="boolean"/>
+
+        <attr name="rangeTrackHeight" format="dimension">
             <enum name="match_parent" value="-1" />
         </attr>
         <attr name="barPadding" format="dimension"/>
-        <attr name="gap" format="dimension"/>
-        <attr name="enablePushThumb" format="boolean"/>
+        <attr name="barColor" format="reference|color"/>
+        <attr name="trackColor" format="reference|color"/>
+        <attr name="barDrawable" format="reference"/>
     </declare-styleable>
 </resources>

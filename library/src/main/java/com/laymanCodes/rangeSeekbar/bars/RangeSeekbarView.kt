@@ -19,6 +19,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import androidx.annotation.ColorInt
 import androidx.annotation.IntDef
 import androidx.core.content.withStyledAttributes
 import com.laymanCodes.rangeSeekbar.R
@@ -61,7 +62,7 @@ public class RangeSeekbarView : View {
     private fun initialize(context: Context, attrs: AttributeSet?) {
         this.cornerRadius = 5.px.toFloat()
         this.barPadding = 10.px.toFloat()
-        this.barHeight = 10.px
+        this.trackHeight = 10.px
         getAttributeFromXml(context, attrs)
         initSetup()
     }
@@ -74,6 +75,7 @@ public class RangeSeekbarView : View {
 
     private var leftThumbDrawable: Drawable? = null
     private var rightThumbDrawable: Drawable? = null
+    private var barDrawable: Drawable? = null
     private var leftThumbWidth: Int = 20.px
     private var rightThumbWidth: Int = 20.px
     private var leftThumbHeight: Int = 20.px
@@ -87,7 +89,9 @@ public class RangeSeekbarView : View {
 
     private var cornerRadius: Float = 20.px.toFloat()
     private var barPadding: Float = 10.px.toFloat()
-    private var barHeight: Int = 30.px
+    private var trackHeight: Int = 30.px
+    private var barColor: Int = Color.GRAY
+    private var trackColor: Int = Color.BLACK
     private var rangeMin: Int = 0               //  min range choose-able
     private var rangeMax: Int = 1000             //  max range choose-able
     private var chosenMin: Float = rangeMin.toFloat()        //  actual chosen min value
@@ -113,7 +117,7 @@ public class RangeSeekbarView : View {
     }
 
 
-    fun getBarHeight() = barHeight
+    fun getTrackHeight() = trackHeight
 
     fun getRangeMin() = rangeMin
 
@@ -135,8 +139,10 @@ public class RangeSeekbarView : View {
 
     fun getRThumbHeight() = rightThumbHeight
 
-    fun setBarHeight(newHeight: Int) {
-        barHeight = if (newHeight == -1){
+    fun getTrackColor() = trackColor
+
+    fun setTrackHeight(newHeight: Int) {
+        trackHeight = if (newHeight == -1){
             height
         } else {
             newHeight
@@ -185,17 +191,25 @@ public class RangeSeekbarView : View {
         rightThumbHeight = height
     }
 
+    fun setTrackColor(@ColorInt color: Int) {
+        trackColor = color
+    }
+
     private fun getAttributeFromXml(context: Context, attrs: AttributeSet?) {
         context.withStyledAttributes(attrs, R.styleable.RangeSeekbar) {
             leftThumbDrawable = getDrawable(R.styleable.RangeSeekbar_leftThumbDrawable)
             rightThumbDrawable = getDrawable(R.styleable.RangeSeekbar_rightThumbDrawable)
+            barDrawable = getDrawable(R.styleable.RangeSeekbar_barDrawable)
 
             leftThumbWidth = getDimensionPixelSize(R.styleable.RangeSeekbar_leftThumbWidth, 20.px)
             rightThumbWidth = getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbWidth, 20.px)
             leftThumbHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_leftThumbHeight, 20.px)
             rightThumbHeight = getDimensionPixelSize(R.styleable.RangeSeekbar_rightThumbHeight, 20.px)
-            barHeight = getLayoutDimension(R.styleable.RangeSeekbar_barHeight, 20.px)
+
+            trackHeight = getLayoutDimension(R.styleable.RangeSeekbar_rangeTrackHeight, 20.px)
             barPadding = getDimensionPixelSize(R.styleable.RangeSeekbar_barPadding, 10.px).toFloat()
+            barColor = getColor(R.styleable.RangeSeekbar_barColor, Color.GRAY)
+            trackColor = getColor(R.styleable.RangeSeekbar_trackColor, Color.BLACK)
 
             gap = getDimensionPixelSize(R.styleable.RangeSeekbar_gap, 5.px)
 
@@ -220,18 +234,18 @@ public class RangeSeekbarView : View {
         barPaint.apply {
             style = Paint.Style.FILL
             isAntiAlias = true
-            color = context.getColor(R.color.track_gray)
+            color = trackColor
         }
 
-        if (barHeight == -1){
-            barHeight = height
+        if (trackHeight == -1){
+            trackHeight = height
         }
 
         barRect.apply {
             left = barPadding
-            top = (height - barHeight) * .5f
+            top = (height - trackHeight) * .5f
             right = width.toFloat() - barPadding
-            bottom = (barHeight + height) * .5f
+            bottom = (trackHeight + height) * .5f
         }
 
         drawTrack(canvas, barPaint, barRect)
